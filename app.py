@@ -75,17 +75,17 @@ datasets_info = {
         "apply_year_filter": False
     },
     "Aviation": {
-        "file_path": "AllData.csv",
+        "file_path": "2.csv",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     },
     "Building": {
-        "file_path": "AllData.csv",
+        "file_path": "3.csv",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     },
     "Industry": {
-        "file_path": "AllData.csv",
+        "file_path": "4.csv",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     }
