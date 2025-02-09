@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+import plotly.express as px
 
 # Set page config to full screen
 st.set_page_config(layout="wide")
@@ -9,9 +10,9 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_data_preview(file_path):
     if file_path.endswith('.xlsx'):
-        df = pd.read_excel(file_path, nrows=1000)  # Only load a preview of 1000 rows
+        df = pd.read_excel(file_path,)  # Only load a preview of 1000 rows
     elif file_path.endswith('.csv'):
-        df = pd.read_csv(file_path, nrows=1000)  # Only load a preview of 1000 rows
+        df = pd.read_csv(file_path,)  # Only load a preview of 1000 rows
     else:
         return None
     return df
@@ -50,11 +51,17 @@ def to_excel(df):
     return processed_data
 
 # Streamlit UI
-st.title("Data Explorer")
+# Display logo and title
+col1, col2 = st.columns([1, 5])
+with col1:
+    st.image("SBT_Logo.png", width=100)
+with col2:
+    st.title("Data Explorer")
+
 st.write("Here you can find all the raw data that is used in the other modules across the site. Filter the data using the picklists at the top and download data for that module or the whole site for your own analysis.")
 
 # Define tabs for multiple data sources
-tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power Sector", "Aviation", "Building", "Industry"])
+tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
 
 # File paths and filter columns for different datasets
 datasets_info = {
@@ -63,29 +70,29 @@ datasets_info = {
         "filter_columns": ["Category", "Model", "Scenario", "Region", "Variable", "Unit"],
         "apply_year_filter": True
     },
-    "Cross-Sectional Pathways": {
+    "Cross-Sector Pathways": {
         "file_path": "AllData.csv",
-        "filter_columns": ["Model", "Scenario", "Region", "Variable",],
+        "filter_columns": ["Model", "Scenario", "Region", "Variable","Unit"],
         
         "apply_year_filter": True
     },
-    "Power": {
+    "Power-Sector": {
         "file_path": "Pathway Database - Updated 2024-205.xlsx",
-        "filter_columns": ["Metric","Model", "Scenario", "Variable"],
+        "filter_columns": ["Metric","Model", "Scenario", "Unit", "scen_id"],
         "apply_year_filter": False
     },
-    "Aviation": {
-        "file_path": "2.csv",
-        "filter_columns": ["Model", "Scenario"],
+    "Chemical": {
+        "file_path": "N2Oandchemical.xlsx",
+        "filter_columns": ["Category", "Parameter", "Unit"],
         "apply_year_filter": False
     },
     "Building": {
-        "file_path": "3.csv",
+        "file_path": "AllData2.csv",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     },
     "Industry": {
-        "file_path": "4.csv",
+        "file_path": "AllData2.csv",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     }
@@ -117,17 +124,20 @@ for idx, tab in enumerate(tabs):
             cols = st.columns(len(filter_columns))
 
             selected_values = {}  # For storing selected filter values
-
+            
+            # Update filter options dynamically based on previous selections
             # Update filter options dynamically based on previous selections
             for i, col in enumerate(filter_columns):
                 if col in df_full.columns:
-                    options = [""] + df_full[col].astype(str).unique().tolist()
-                    selected_values[col] = cols[i].selectbox(f"{col}", options, key=f"{col}_{idx}")
+                    options = df_full[col].astype(str).unique().tolist()
+                    selected_values[col] = cols[i].multiselect(f"{col}", options, key=f"{col}_{idx}")
 
-                    # Apply the filter to the dataset
-                    if selected_values[col]:
-                        df_full = df_full[df_full[col].astype(str).str.contains(selected_values[col], case=False, na=False)]
+            # Apply the filter to the dataset
+            for col, values in selected_values.items():
+                if values:  # Ensure selections are made
+                    df_full = df_full[df_full[col].astype(str).str.lower().isin([v.lower() for v in values])]
 
+            
             # Add year range filters for 'AllData' dataset or any dataset requiring year filtering
             if dataset_info["apply_year_filter"]:
                 # Get list of years from the dataset
@@ -161,7 +171,7 @@ for idx, tab in enumerate(tabs):
             # Button to load full data and apply filters
             if st.button("Apply Filters", key=f"apply_filters_{dataset_name}_{idx}"):
                 # Show filtered data
-                st.write("### Filtered Data")
+                st.write(f"### Filtered Data {dataset_name}")
                 st.dataframe(df_full.head(10))
 
                 # Button to download filtered data
@@ -173,5 +183,111 @@ for idx, tab in enumerate(tabs):
                     mime="application/vnd.ms-excel",
                     key=f"download_button_{dataset_name}_{idx}"  # Ensure unique key for download button
                 )
+
+                # Identify year columns (assuming they are numeric)
+                year_columns = [str(col) for col in df_full.columns if str(col).isdigit()]
+
+                if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways":
+                    st.write("### Visualizing Data")
+                    
+                    df_model = df_full.copy()
+                    df_model.fillna(0, inplace=True)
+
+                    # Ensure year columns are numeric
+                    df_model[year_columns] = df_model[year_columns].apply(pd.to_numeric, errors='coerce')
+
+                    # Reshape data from wide to long format
+                    df_melted = df_model.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                                             value_vars=year_columns, 
+                                            var_name="Year", value_name="Value")
+                    
+                    df_melted = df_melted.groupby(['Variable','Year'])['Value'].median().reset_index()
+                    # Convert Year column to integer
+                    df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
+                    df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
+
+                    median_values = df_melted.groupby('Year')['Value'].median().reset_index()
+                    median_values['Variable'] = 'Median'
+
+                    # Combine the original data with the median data
+                    df_combined = pd.concat([df_melted, median_values])
+                   
+                    # Plotly line chart with multiple lines for different models
+                    fig = px.line(df_combined, x="Year", y="Value", color="Variable",
+                                title="Trend Comparison of Selected Models",
+                                labels={"Value": "Metric Value", "Year": "Year", "Variable": "Variable"},
+                                markers=False)  # Add markers to check if points are plotted
+                    
+                    # Set chart height
+                    fig.update_layout(height=600)  # Adjust the height as needed (default is ~450)
+                    fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median"),)
+
+                    st.plotly_chart(fig)      
+
+                if dataset_name=="Power-Sector":
+                    st.write("### Visualizing Data")
+                    # Calculate the median line across all years
+                    #print(df_full.columns)
+                    df_full = df_full[~df_full.apply(lambda row: row.astype(str).str.contains('Median').any(), axis=1)]
+
+                    df_melted = df_full.melt(id_vars=["Metric", "Model", "Scenario", "Unit", "scen_id"], 
+                                        value_vars=[(year) for year in range(2020, 2051, 5)], 
+                                        var_name="Year", value_name="Value")
+
+                    # Calculate the median across all models for each year
+                    median_values = df_melted.groupby('Year')['Value'].median().reset_index()
+                    median_values['Model'] = 'Median - ALL'
+                    median_values['Scenario'] = 'Median - ALL'
+                    median_values['scen_id'] = 'Median - ALL'
+
+                    # Combine the original data with the median data
+                    df_combined = pd.concat([df_melted, median_values])
+                    unit = df_combined["Unit"].unique()[0]
+                    # Plot the line chart
+                    fig = px.line(df_combined, x="Year", y="Value", color="scen_id", 
+                                title="Trend Comparison of scen_id and Median", 
+                                labels={"Value": unit, "Year": "Year", "scen_id": "scen_id"})
+
+                    # Set the line styles for median and other models
+                    fig.update_traces(line=dict(color="grey"), selector=dict(name="scen_id"))
+                    fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median - ALL"),)
+
+                    # Set chart height
+                    fig.update_layout(height=600)  # Adjust the height as needed (default is ~450)
+                    # Display the plot in Streamlit
+                    st.plotly_chart(fig)
+
+                
+                if dataset_name == "Chemical":
+                    df_full.columns = df_full.columns.astype(str)
+
+                    # Melt DataFrame for Plotly
+                    df_melted = df_full.melt(id_vars=["Category", "Parameter", "Unit"], 
+                                            var_name="Year", 
+                                            value_name="Value")
+
+                    # Streamlit App
+                    st.title("Parameter Trends Over Time")
+
+                    # Loop through each unique Parameter and plot separate charts
+                    for i, param in enumerate(df_melted["Parameter"].unique()):
+                        df_filtered = df_melted[df_melted["Parameter"] == param]
+                        unit = df_melted["Unit"].unique()[0]
+
+                        # Create line chart
+                        fig = px.line(df_filtered, 
+                                    x="Year", 
+                                    y="Value", 
+                                    color="Category",
+                                    markers=True,  # Add markers to data points
+                                    labels={"Value": unit},
+                                    title=f"{param} - Line Chart by Category")
+                        
+                        # Ensure x-axis only shows the available years in data
+                        fig.update_xaxes(type="category")
+
+                        # Display chart in Streamlit
+                        st.plotly_chart(fig, use_container_width=True)
+
         else:
             st.error("Error loading data preview.")

@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.csv filter=lfs diff=lfs merge=lfs -text
+C1-3_summary_2050_variable.csv filter=lfs diff=lfs merge=lfs -text
