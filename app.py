@@ -217,7 +217,7 @@ for idx, tab in enumerate(tabs):
                                              value_vars=year_columns, 
                                             var_name="Year", value_name="Value")
                     
-                    df_melted = df_melted.groupby(['Variable','Year'])['Value'].median().reset_index()
+                    #df_melted = df_melted.groupby(['Variable','Year'])['Value'].median().reset_index()
                     # Convert Year column to integer
                     df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
                     df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
