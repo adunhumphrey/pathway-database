@@ -229,9 +229,9 @@ for idx, tab in enumerate(tabs):
                     df_combined = pd.concat([df_melted, median_values])
                    
                     # Plotly line chart with multiple lines for different models
-                    fig = px.line(df_combined, x="Year", y="Value", color="Variable",
+                    fig = px.line(df_combined, x="Year", y="Value", color="Scenario",
                                 title="Trend Comparison of Selected Models",
-                                labels={"Value": "Metric Value", "Year": "Year", "Variable": "Variable"},
+                                labels={"Value": "Metric Value", "Year": "Year", "Scenario": "Scenario"},
                                 markers=False)  # Add markers to check if points are plotted
                     
                     # Set chart height
