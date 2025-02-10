@@ -223,7 +223,7 @@ for idx, tab in enumerate(tabs):
                     df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
 
                     median_values = df_melted.groupby('Year')['Value'].median().reset_index()
-                    median_values['Variable'] = 'Median'
+                    median_values['Scenario'] = 'Median'
 
                     # Combine the original data with the median data
                     df_combined = pd.concat([df_melted, median_values])
