@@ -70,12 +70,12 @@ col1, col2 = st.columns([1, 5])
 with col1:
     st.image("SBT_Logo.jpg", width=100)
 with col2:
-    st.title("Data Explorer")
+    st.title("SBTi Pathway Explorer")
 
-st.write("Here you can find all the raw data that is used in the other modules across the site. Filter the data using the picklists at the top and download data for that module or the whole site for your own analysis.")
+st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
 # Define tabs for multiple data sources
-tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
+tabs = st.tabs(["IPCC", "Cross-Sector", "Power Sector", "Chemical", "Building", "Oil and Gas"])
 
 # File paths and filter columns for different datasets
 datasets_info = {
