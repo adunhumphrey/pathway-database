@@ -70,7 +70,7 @@ col1, col2 = st.columns([1, 5])
 with col1:
     st.image("SBT_Logo.jpg", width=100)
 with col2:
-    st.title("Data Explorer")
+    st.title("Pathway Explorer")
 
 st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
