@@ -3,44 +3,30 @@ import pandas as pd
 from io import BytesIO
 import plotly.express as px
 
-# Set Streamlit page to wide layout
+# Set page config to full screen
 st.set_page_config(layout="wide")
 
-# Function to load data preview (first 100 rows)
+# Function to load data for preview (only first 1000 rows to avoid huge data loads)
 @st.cache_data
 def load_data_preview(file_path):
-    try:
-        if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path, nrows=100, engine='openpyxl',)
-        elif file_path.endswith('.csv'):
-            df = pd.read_csv(file_path, encoding="utf-8", nrows=100)
-        else:
-            return None
-        return df
-    except FileNotFoundError:
-        st.warning(f"File not found: {file_path}. Upload it below if missing.")
+    if file_path.endswith('.xlsx'):
+        df = pd.read_excel(file_path,nrows=100, engine="openpyxl")  # Only load a preview of 1000 rows
+    elif file_path.endswith('.csv'):
+        df = pd.read_csv(file_path, encoding="utf-8", nrows=100)  # Only load a preview of 1000 rows
+    else:
         return None
-    except Exception as e:
-        st.error(f"Error loading file: {str(e)}")
-        return None
+    return df
 
-# Function to load full dataset
+# Function to load full data (for applying filters)
 @st.cache_data
 def load_full_data(file_path):
-    try:
-        if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path, engine='openpyxl',)
-        elif file_path.endswith('.csv'):
-            df = pd.read_csv(file_path, encoding="utf-8")
-        else:
-            return None
-        return df
-    except FileNotFoundError:
-        st.warning(f"File not found: {file_path}. Upload it below if missing.")
+    if file_path.endswith('.xlsx'):
+        df = pd.read_excel(file_path, engine="openpyxl")
+    elif file_path.endswith('.csv'):
+        df = pd.read_csv(file_path, encoding="utf-8")
+    else:
         return None
-    except Exception as e:
-        st.error(f"Error loading file: {str(e)}")
-        return None
+    return df
 
 # Function to filter data
 def filter_data(df, filters):
@@ -51,7 +37,7 @@ def filter_data(df, filters):
 
 # Function to filter based on year range (specific to Dataset 1)
 def filter_by_year(df, filter_columns, start_year, end_year):
-    year_columns = [(col) for col in df_full.columns if str(col).isdigit()]
+    year_columns = [col for col in df.columns if col.isdigit()]
     year_columns = sorted(year_columns, key=int)
     selected_years = [year for year in year_columns if start_year <= int(year) <= end_year]
     return df[filter_columns + selected_years]
@@ -70,23 +56,23 @@ col1, col2 = st.columns([1, 5])
 with col1:
     st.image("SBT_Logo.jpg", width=100)
 with col2:
-    st.title("SBTi Pathway Explorer")
+    st.title("Data Explorer")
 
-st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
+st.write("Here you can find all the raw data that is used in the other modules across the site. Filter the data using the picklists at the top and download data for that module or the whole site for your own analysis.")
 
 # Define tabs for multiple data sources
-tabs = st.tabs(["IPCC", "Cross-Sector", "Power Sector", "Chemical", "Building", "Oil and Gas"])
+tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
 
 # File paths and filter columns for different datasets
 datasets_info = {
     "IPCC": {
-        "file_path": "C1-3_summary_2050_variable.csv",
+        "file_path": "C1-3_summary_2050_variable.xlsx",
         "filter_columns": ["Category", "Model", "Scenario", "Region", "Variable", "Unit"],
         "apply_year_filter": True
     },
     "Cross-Sector Pathways": {
-        "file_path": "Alldata.xlsx",
-        "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
+        "file_path": "AllData.xlsx",
+        "filter_columns": ["Model", "Scenario", "Region", "Variable","Unit"],
         
         "apply_year_filter": True
     },
@@ -101,12 +87,12 @@ datasets_info = {
         "apply_year_filter": False
     },
     "Building": {
-        "file_path": "Alldata2.xlsx",
+        "file_path": "AllData2.xlsx",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     },
     "Industry": {
-        "file_path": "Alldata3.xlsx",
+        "file_path": "AllData3.xlsx",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     }
@@ -122,15 +108,15 @@ for idx, tab in enumerate(tabs):
         
         # Load data preview (first 1000 rows only)
         file_path = dataset_info["file_path"]
-    
-        df_preview = load_data_preview(file_path)
+        st.write(file_path)
+        df_preview = load_full_data(file_path)
 
         if df_preview is not None:
             st.write("### Data Preview")
             st.dataframe(df_preview.head())
 
             # Load full data for filtering purposes (without limiting to preview rows)
-            df_full = load_full_data(file_path)
+            df_full = df_preview.copy()
 
             # Filtering UI based on the full data columns (not preview)
             st.write("### Filter Data")
@@ -156,7 +142,7 @@ for idx, tab in enumerate(tabs):
             # Add year range filters for 'AllData' dataset or any dataset requiring year filtering
             if dataset_info["apply_year_filter"]:
                 # Get list of years from the dataset
-                year_columns = [str(col) for col in df_full.columns if str(col).isdigit()]
+                year_columns = [col for col in df_full.columns if col.isdigit()]
                 year_columns = sorted(year_columns, key=int)  # Sort years in ascending order
 
                 # Dropdown for Start Year
@@ -200,8 +186,7 @@ for idx, tab in enumerate(tabs):
                 )
 
                 # Identify year columns (assuming they are numeric)
-                year_columns = [(col) for col in df_full.columns if str(col).isdigit()]
-                year_columns = sorted(year_columns, key=int)
+                year_columns = [str(col) for col in df_full.columns if str(col).isdigit()]
 
                 if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways":
                     st.write("### Visualizing Data")
@@ -217,25 +202,25 @@ for idx, tab in enumerate(tabs):
                                              value_vars=year_columns, 
                                             var_name="Year", value_name="Value")
                     
-                    #df_melted = df_melted.groupby(['Variable','Year'])['Value'].median().reset_index()
+                    df_melted = df_melted.groupby(['Variable','Year'])['Value'].median().reset_index()
                     # Convert Year column to integer
                     df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
                     df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
 
                     median_values = df_melted.groupby('Year')['Value'].median().reset_index()
-                    median_values['Scenario'] = 'Median'
+                    median_values['Variable'] = 'Median'
 
                     # Combine the original data with the median data
                     df_combined = pd.concat([df_melted, median_values])
                    
                     # Plotly line chart with multiple lines for different models
-                    fig = px.line(df_combined, x="Year", y="Value", color="Scenario",
+                    fig = px.line(df_combined, x="Year", y="Value", color="Variable",
                                 title="Trend Comparison of Selected Models",
-                                labels={"Value": "Metric Value", "Year": "Year", "Scenario": "Scenario"},
+                                labels={"Value": "Metric Value", "Year": "Year", "Variable": "Variable"},
                                 markers=False)  # Add markers to check if points are plotted
                     
                     # Set chart height
-                    fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                    fig.update_layout(height=600)  # Adjust the height as needed (default is ~450)
                     fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median"),)
 
                     st.plotly_chart(fig)      
@@ -269,7 +254,7 @@ for idx, tab in enumerate(tabs):
                     fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median - ALL"),)
 
                     # Set chart height
-                    fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                    fig.update_layout(height=600)  # Adjust the height as needed (default is ~450)
                     # Display the plot in Streamlit
                     st.plotly_chart(fig)
 
