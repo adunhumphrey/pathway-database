@@ -72,7 +72,7 @@ with col1:
 with col2:
     st.title("Data Explorer")
 
-st.write("Here you can find all the raw data that is used in the other modules across the site. Filter the data using the picklists at the top and download data for that module or the whole site for your own analysis.")
+st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
 # Define tabs for multiple data sources
 tabs = st.tabs(["Document", "IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
@@ -138,7 +138,7 @@ for idx, tab in enumerate(tabs):
                 st.session_state["selected_var"] = None
 
             st.title("Eligible SBTi Scenarios")
-            st.write("These are the eligible Models 7 Scenarios for pathway development in cross-sector and sector-specific standards")
+            st.write("These are the eligible Scenarios that pass the principled-driven criteria used in cross-sector and sector-specific pathways")
             # Layout: Left (buttons) | Right (data)
             col1, col2 = st.columns([1, 5])
 
