@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 def load_data_preview(file_path):
     try:
         if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path, nrows=100, engine='openpyxl',sheet_name='Sheet1')
+            df = pd.read_excel(file_path, nrows=100, engine='openpyxl',)
         elif file_path.endswith('.csv'):
             df = pd.read_csv(file_path, encoding="utf-8", nrows=100)
         else:
@@ -29,7 +29,7 @@ def load_data_preview(file_path):
 def load_full_data(file_path):
     try:
         if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path, engine='openpyxl', sheet_name='Sheet1')
+            df = pd.read_excel(file_path, engine='openpyxl',)
         elif file_path.endswith('.csv'):
             df = pd.read_csv(file_path, encoding="utf-8")
         else:
@@ -85,8 +85,8 @@ datasets_info = {
         "apply_year_filter": True
     },
     "Cross-Sector Pathways": {
-        "file_path": "AllData.xlsx",
-        "filter_columns": ["Model", "Scenario", "Region", "Variable","Unit"],
+        "file_path": "Alldata.xlsx",
+        "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
         
         "apply_year_filter": True
     },
@@ -101,12 +101,12 @@ datasets_info = {
         "apply_year_filter": False
     },
     "Building": {
-        "file_path": "AllData2.xlsx",
+        "file_path": "Alldata2.xlsx",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     },
     "Industry": {
-        "file_path": "AllData3.xlsx",
+        "file_path": "Alldata3.xlsx",
         "filter_columns": ["Model", "Scenario"],
         "apply_year_filter": False
     }
