@@ -81,7 +81,7 @@ tabs = st.tabs(["Document", "IPCC", "Cross-Sector Pathways", "Power-Sector", "Ch
 datasets_info = {
     "Document": {
         "file_path": "Alldata.xlsx",
-        "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
+        "filter_columns": ["Model", "Scenario", "Region", "Variable"],
         "apply_year_filter": False
     },
     "IPCC": {
@@ -137,13 +137,12 @@ for idx, tab in enumerate(tabs):
             if "selected_var" not in st.session_state:
                 st.session_state["selected_var"] = None
 
-            st.title("IPCC Data Explorer")
+            st.title("Eligible SBTi Scenarios")
             st.write("These are the eligible Models 7 Scenarios for pathway development in cross-sector and sector-specific standards")
             # Layout: Left (buttons) | Right (data)
             col1, col2 = st.columns([1, 5])
 
             with col1:
-                st.subheader("Select a Variable:")
                     
                 for col in categorical_columns:
                     if st.button(col):
@@ -153,7 +152,7 @@ for idx, tab in enumerate(tabs):
             with col2:
                 if st.session_state["selected_var"]:
                     selected_var = st.session_state["selected_var"]
-                    st.subheader(f"Unique Values for: {selected_var}")
+                    #st.subheader(f"Unique Values for: {selected_var}")
 
                     # Search box for filtering unique values
                     search_query = st.text_input("Search:", "")
@@ -163,11 +162,10 @@ for idx, tab in enumerate(tabs):
                     filtered_values = [val for val in unique_values if search_query.lower() in str(val).lower()]
                         
                     # Convert to DataFrame and display
-                    unique_df = pd.DataFrame(filtered_values, columns=[selected_var])
-                    st.dataframe(unique_df, use_container_width=True, height=600)  # Full-width display
+                    unique_df = pd.DataFrame(filtered_values, columns=[selected_var]).reset_index()
+                    print(unique_df[selected_var])
+                    st.dataframe(unique_df[selected_var].values, use_container_width=True, height=600)  # Full-width display
 
-                else:
-                    st.error("Error loading data preview.")
 
 
         elif dataset_name != "Document":
