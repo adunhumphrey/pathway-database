@@ -97,7 +97,7 @@ datasets_info = {
     },
     "Power-Sector": {
         "file_path": "Pathway Database - Updated 2024-205.xlsx",
-        "filter_columns": ["Metric","Model", "Scenario", "Unit", "scen_id"],
+        "filter_columns": ["Metric","Model", "Scenario", "Unit"],
         "apply_year_filter": False
     },
     "Chemical": {
