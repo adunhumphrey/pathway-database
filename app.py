@@ -282,7 +282,7 @@ for idx, tab in enumerate(tabs):
                         df_combined = df_combined[df_combined['Value']!=0]
                         # Plotly line chart with multiple lines for different models
                         fig = px.line(df_combined, x="Year", y="Value", color="Scenario",
-                                    title="Trend Comparison of Selected Models",
+                                    #title="Trend Comparison of Selected Models",
                                     labels={"Value": "Metric Value", "Year": "Year", "Scenario": "Scenario"},
                                     markers=False)  # Add markers to check if points are plotted
                         
