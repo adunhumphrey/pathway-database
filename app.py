@@ -26,12 +26,14 @@ def load_data_preview(file_path):
 
 # Function to load full dataset
 @st.cache_data
-def load_full_data(file_path):
+def load_full_data(file_path,sheet=None, skip_row=None):
     try:
         if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path, engine='openpyxl',)
+            df = pd.read_excel(file_path, engine='openpyxl')
         elif file_path.endswith('.csv'):
             df = pd.read_csv(file_path, encoding="utf-8")
+        elif file_path=="Phase-Out.xlsx":
+            df = pd.read_excel(file_path, engine='openpyxl',sheet_name='Phase out dates', skiprows=3)
         else:
             return None
         return df
@@ -75,44 +77,56 @@ with col2:
 st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
 # Define tabs for multiple data sources
-tabs = st.tabs(["Document", "IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
+tabs = st.tabs(["Document", "Phase-Out", "IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry"])
 
 # File paths and filter columns for different datasets
 datasets_info = {
     "Document": {
         "file_path": "Alldata.xlsx",
         "filter_columns": ["Model", "Scenario", "Region", "Variable"],
+        "remove_columns": [],
+        "apply_year_filter": False
+    },
+        "Phase-Out": {
+        "file_path": "Phase-Out.xlsx",
+        "filter_columns": ["Model", "Scenario", "Region", "Variable"],
+        "remove_columns": [],
         "apply_year_filter": False
     },
     "IPCC": {
         "file_path": "C1-3_summary_2050_variable.csv",
-        "filter_columns": ["Category", "Model", "Scenario", "Region", "Variable", "Unit"],
+        "filter_columns": ["Category", "Model", "Scenario", "Region", "Variable",'Unit'],
+        "remove_columns": [],
         "apply_year_filter": True
     },
     "Cross-Sector Pathways": {
         "file_path": "Alldata.xlsx",
         "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
-        
+        "remove_columns": [],
         "apply_year_filter": True
     },
     "Power-Sector": {
         "file_path": "Pathway Database - Updated 2024-205.xlsx",
         "filter_columns": ["Metric","Model", "Scenario", "Unit"],
+        "remove_columns": [],
         "apply_year_filter": False
     },
     "Chemical": {
         "file_path": "N2Oandchemical.xlsx",
         "filter_columns": ["Category", "Parameter", "Unit"],
+        "remove_columns": [],
         "apply_year_filter": False
     },
     "Building": {
         "file_path": "Alldata2.xlsx",
         "filter_columns": ["Model", "Scenario"],
+        "remove_columns": [],
         "apply_year_filter": False
     },
     "Industry": {
         "file_path": "Alldata3.xlsx",
         "filter_columns": ["Model", "Scenario"],
+        "remove_columns": [],
         "apply_year_filter": False
     }
 }
@@ -129,13 +143,17 @@ for idx, tab in enumerate(tabs):
             
             file_path = dataset_info["file_path"]
 
-            df = load_full_data(file_path)
+            df = load_full_data(file_path,)
+
             # Drop integer and float columns, keeping only categorical columns
-            categorical_columns = df.select_dtypes(exclude=['int64', 'float64']).columns
+            #categorical_columns = df.select_dtypes(exclude=['int64', 'float64']).columns
+
+            # Remove unwated columns
+            categorical_columns = dataset_info['filter_columns']
 
             # Initialize session state for selection persistence
             if "selected_var" not in st.session_state:
-                st.session_state["selected_var"] = None
+                st.session_state["selected_var"] = categorical_columns[0]
 
             st.title("Eligible SBTi Scenarios")
             st.write("These are the eligible Scenarios that pass the principled-driven criteria used in cross-sector and sector-specific pathways")
@@ -163,25 +181,37 @@ for idx, tab in enumerate(tabs):
                         
                     # Convert to DataFrame and display
                     unique_df = pd.DataFrame(filtered_values, columns=[selected_var]).reset_index()
-                    print(unique_df[selected_var])
+                    st.write(f'{unique_df[selected_var].nunique()}, unique {selected_var}')
                     st.dataframe(unique_df[selected_var].values, use_container_width=True, height=600)  # Full-width display
 
 
+        elif dataset_name == 'Phase-Out':
 
-        elif dataset_name != "Document":
+            file_path = dataset_info["file_path"]
+            remove_cols = dataset_info['remove_columns']
+            df = load_full_data(file_path)
+            st.write('This sheet shows the phase out dates for some fossil commodities')
+            st.write('Disclaimer: The sector-specific requirements for key economic activities are derived from specific scenarios e.g IEA to provide additional guidelines on how activities need to transition at interim period on the way to net zero. The activity specific milestones are not available in all IPCC scenarios and there may be wide variations across  IPCC models. Therefore, the granularity that IEA provides for these indicators are useful, even though they may not align with the assumptions from the overall IPCC scenarios.')
+            st.dataframe(df, hide_index=True)
+
+
+        elif dataset_name not in ["Document", "Phase-Out"]:
             st.subheader(f"View and Filter {dataset_name}")
             
             # Load data preview (first 1000 rows only)
             file_path = dataset_info["file_path"]
-        
+            remove_cols = dataset_info['remove_columns']
+            #st.write(remove_cols)
             df_preview = load_data_preview(file_path)
-
+            df_preview.drop(columns=remove_cols,inplace=True)
             if df_preview is not None:
                 st.write("### Data Preview")
-                st.dataframe(df_preview.head())
+                st.dataframe(df_preview.head(), hide_index=True)
 
                 # Load full data for filtering purposes (without limiting to preview rows)
                 df_full = load_full_data(file_path)
+                df_full.drop(columns=remove_cols,inplace=True)
+            
 
                 # Filtering UI based on the full data columns (not preview)
                 st.write("### Filter Data")
@@ -238,7 +268,7 @@ for idx, tab in enumerate(tabs):
                 if st.button("Apply Filters", key=f"apply_filters_{dataset_name}_{idx}"):
                     # Show filtered data
                     st.write(f"### Filtered Data {dataset_name}")
-                    st.dataframe(df_full.head(10))
+                    st.dataframe(df_full.head(100), hide_index=True)
 
                     # Button to download filtered data
                     excel_data = to_excel(df_full)
@@ -280,11 +310,16 @@ for idx, tab in enumerate(tabs):
                         df_combined = pd.concat([df_melted, median_values])
                         df_combined.dropna(subset=["Value"], inplace=True)
                         df_combined = df_combined[df_combined['Value']!=0]
+
+                        if df_combined["Unit"].nunique()==1:
+                            unit = df_combined["Unit"].unique()[0]
+                        else: unit='Unit (Mixed)'
+                        
                         # Plotly line chart with multiple lines for different models
                         fig = px.line(df_combined, x="Year", y="Value", color="Scenario",
                                     #title="Trend Comparison of Selected Models",
-                                    labels={"Value": "Metric Value", "Year": "Year", "Scenario": "Scenario"},
-                                    markers=False)  # Add markers to check if points are plotted
+                                    labels={"Value": unit, "Year": "Year", "Scenario": "Scenario"},
+                                    markers=True)  # Add markers to check if points are plotted
                         
                         fig.update_xaxes(type="category")
                         # Set chart height
@@ -311,7 +346,11 @@ for idx, tab in enumerate(tabs):
 
                         # Combine the original data with the median data
                         df_combined = pd.concat([df_melted, median_values])
-                        unit = df_combined["Unit"].unique()[0]
+                        
+                        if df_combined["Unit"].nunique()==1:
+                            unit = df_combined["Unit"].unique()[0]
+                        else: unit='Unit (Mixed)'
+
                         # Plot the line chart
                         fig = px.line(df_combined, x="Year", y="Value", color="scen_id", 
                                     title="Trend Comparison of scen_id and Median", 
