@@ -67,7 +67,7 @@ def to_excel(df):
     return processed_data
 
 # Create columns for buttons at the top-right
-col1, col2, col3 = st.columns([8, 0.6, 1])  # Adjust column width for spacing
+col1, col2, col3 = st.columns([8, 1, 1])  # Adjust column width for spacing
 
 with col2:
     if st.button("Home"):
