@@ -482,15 +482,51 @@ elif st.session_state["page"] == "Reference":
                         st.dataframe(unique_df[selected_var].values, use_container_width=True, height=600)  # Full-width display
 
 
-            elif dataset_name == 'Criteria':
+            if dataset_name == 'Criteria':
+    file_path = dataset_info["file_path"]
+    remove_cols = dataset_info['remove_columns']
+    df = load_full_data(file_path, None, None)
 
-                file_path = dataset_info["file_path"]
-                remove_cols = dataset_info['remove_columns']
-                df = load_full_data(file_path,None, None)
-                st.write('This sheet shows the principed-driven criteria used to filter scenarios retrieved from literature')
-                st.write('These filters are informed by the guiding principles of the SBTi in its foundational science. They ensure that scenario selection aligns with ambition, responsibility, scientific rigor, actionability, robustness, and transparency. By applying these quantitative criteria, the SBTi ensures that only scientifically robust and equitable pathways are considered.							')
-                st.write('Further details on how SBTi applies science in its pathway development can be found in its document on Here')
-                st.dataframe(df, hide_index=True)
-            else:
-                st.error("Error loading data preview.")
+    # Use a structured heading
+    st.markdown("### Principle-Driven Criteria for Scenario Selection")
+
+    # Use `st.info()` to highlight the purpose
+    st.info(
+        """
+        This sheet presents the **principle-driven criteria** used to filter scenarios retrieved from literature.
+        """
+    )
+
+    # Structured explanation
+    st.markdown(
+        """
+        These filters are informed by the **guiding principles** of the SBTi’s foundational science, ensuring that scenario selection aligns with:
+        
+        - **Ambition** – Aligning with the latest climate science.
+        - **Responsibility** – Reflecting fair and equitable contributions.
+        - **Scientific Rigor** – Maintaining methodological robustness.
+        - **Actionability** – Enabling real-world application.
+        - **Robustness** – Ensuring credibility and resilience.
+        - **Transparency** – Supporting open data and validation.
+
+        By applying these **quantitative criteria**, SBTi ensures that only scientifically robust and equitable pathways are considered.
+        """
+    )
+
+    # Highlight further reading
+    st.markdown(
+        """
+        🔍 *For more details on how SBTi applies science in pathway development, refer to the* 
+        [official document](#) 📄.
+        """
+    )
+
+    # Divider for clarity
+    st.divider()
+
+    # Display the dataset in a user-friendly format
+    st.dataframe(df, hide_index=True)
+
+else:
+    st.error("Error loading data preview.")
 
