@@ -488,7 +488,8 @@ elif st.session_state["page"] == "Reference":
                 remove_cols = dataset_info['remove_columns']
                 df = load_full_data(file_path,None, None)
                 st.write('This sheet shows the principed-driven criteria used to filter scenarios retrieved from literature')
-                st.write('')
+                st.write('Further details on how SBTi applies science in its pathway development can be found in its document on Here')
+                st.write('These filters are informed by the guiding principles of the SBTi in its foundational science. They ensure that scenario selection aligns with ambition, responsibility, scientific rigor, actionability, robustness, and transparency. By applying these quantitative criteria, the SBTi ensures that only scientifically robust and equitable pathways are considered.							')
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
