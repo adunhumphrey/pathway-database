@@ -487,8 +487,8 @@ elif st.session_state["page"] == "Reference":
                 file_path = dataset_info["file_path"]
                 remove_cols = dataset_info['remove_columns']
                 df = load_full_data(file_path,None, None)
-                st.write('This sheet shows the phase out dates for some fossil commodities')
-                st.write('Disclaimer: The sector-specific requirements for key economic activities are derived from specific scenarios e.g IEA to provide additional guidelines on how activities need to transition at interim period on the way to net zero. The activity specific milestones are not available in all IPCC scenarios and there may be wide variations across  IPCC models. Therefore, the granularity that IEA provides for these indicators are useful, even though they may not align with the assumptions from the overall IPCC scenarios.')
+                st.write('This sheet shows the principed-driven criteria used to filter scenarios retrieved from literature')
+                st.write('')
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
