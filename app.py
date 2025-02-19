@@ -482,13 +482,12 @@ elif st.session_state["page"] == "Reference":
                         st.dataframe(unique_df[selected_var].values, use_container_width=True, height=600)  # Full-width display
 
 
-            if dataset_name == 'Criteria':
-    file_path = dataset_info["file_path"]
-    remove_cols = dataset_info['remove_columns']
-    df = load_full_data(file_path, None, None)
+            elif dataset_name == 'Criteria':
 
-    # Use a structured heading
-    st.markdown("### Principle-Driven Criteria for Scenario Selection")
+                file_path = dataset_info["file_path"]
+                remove_cols = dataset_info['remove_columns']
+                df = load_full_data(file_path,None, None)
+st.markdown("### Principle-Driven Criteria for Scenario Selection")
 
     # Use `st.info()` to highlight the purpose
     st.info(
