@@ -489,7 +489,7 @@ elif st.session_state["page"] == "Reference":
                 df = load_full_data(file_path,None, None)
                 st.write('Here, we show the principed-driven criteria used to filter scenarios retrieved from literature')
                 st.write('These filters are informed by the guiding principles of the SBTi in its foundational science. These principles address ambition, responsibility, scientific rigor, actionability, robustness, and transparency.')
-                st.write('Further details on how SBTi applies science in its pathway development can be found in its document HERE')
+                st.write('Further details on how SBTi applies science in its pathway development can be found HERE')
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
