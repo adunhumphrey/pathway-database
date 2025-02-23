@@ -94,7 +94,7 @@ if st.session_state["page"] == "Page 1":
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
     # Define tabs for multiple data sources
-    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry","Others"])
+    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry","FINZ","Others"])
 
     # File paths and filter columns for different datasets
     datasets_info = {
@@ -134,8 +134,8 @@ if st.session_state["page"] == "Page 1":
             "remove_columns": [],
             "apply_year_filter": False
         },
-        "Industry": {
-            "file_path": "Alldata3.xlsx",
+        "FINZ": {
+            "file_path": "FINZ.xlsx",
             "filter_columns": ["Model", "Scenario"],
             "remove_columns": [],
             "apply_year_filter": False},
@@ -245,7 +245,7 @@ if st.session_state["page"] == "Page 1":
                         year_columns = [(col) for col in df_full.columns if str(col).isdigit()]
                         year_columns = sorted(year_columns, key=int)
 
-                        if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways":
+                        if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways" or dataset_name=="FINZ":
                             #st.write("### Visualizing Data")
                             
                             df_model = df_full.copy()
