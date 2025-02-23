@@ -136,7 +136,7 @@ if st.session_state["page"] == "Page 1":
         },
         "FINZ": {
             "file_path": "FINZ.xlsx",
-            "filter_columns": ["Model", "Scenario"],
+            "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
             "remove_columns": [],
             "apply_year_filter": False},
         "Others": {
