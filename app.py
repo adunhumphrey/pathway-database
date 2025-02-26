@@ -323,7 +323,9 @@ if st.session_state["page"] == "Home":
                             if df_combined["Unit"].nunique()==1:
                                 unit = df_combined["Unit"].unique()[0]
                                 metric_name = df_combined["Metric"].unique()[0]
-                            else: unit='Unit (Mixed)'
+                            else: 
+                                unit='Unit (Mixed)'
+                                metric_name = "Multiple Metric"
 
                             # Plot the line chart
                             fig = px.line(df_combined, x="Year", y="Value", color="Scenario", 
@@ -339,6 +341,74 @@ if st.session_state["page"] == "Home":
                             fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
                             # Display the plot in Streamlit
                             st.plotly_chart(fig)
+                        
+                        if dataset_name=="Building":
+                            #st.write("### Visualizing Data")
+                            # Calculate the median line across all years
+                            #print(df_full.columns)
+                            df_full = df_full[~df_full.apply(lambda row: row.astype(str).str.contains('Median').any(), axis=1)]
+
+                            df_melted = df_full.melt(id_vars=filter_columns, 
+                                                value_vars=[(year) for year in range(2030, 2055, 5)], 
+                                                var_name="Year", value_name="Value")
+
+                            # Calculate the median across all models for each year
+                            median_values = df_melted.groupby('Year')['Value'].median().reset_index()
+                            median_values['Model'] = 'Median - ALL'
+                            median_values['Scenario'] = 'Median - ALL'
+                            median_values['scen_id'] = 'Median - ALL'
+
+                            
+                            
+                            
+                            
+                            if df_melted["Building type"].nunique()==1:
+
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                    metric_name = df_melted["Building type"].unique()[0]
+                                else: 
+                                    unit='Unit (Mixed)'
+                                    metric_name = "Multiple Building type"
+                                # Plot the line chart
+                                fig = px.line(df_melted, x="Year", y="Value", color="Country", 
+                                            title= metric_name, 
+                                            labels={"Value": unit, "Year": "Year", "Country": "Country"},
+                                            markers=True)
+
+                                # Set the line styles for median and other models
+                                fig.update_traces(line=dict(color="grey"), selector=dict(name="Country"))
+                                fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median - ALL"),)
+
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display the plot in Streamlit
+                                st.plotly_chart(fig)
+
+                            elif df_melted["Country"].nunique()==1:
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                    metric_name = df_melted["Country"].unique()[0]
+                                else: 
+                                    unit='Unit (Mixed)'
+                                    metric_name = "Multiple Country"
+                                # Plot the line chart
+                                fig = px.line(df_melted, x="Year", y="Value", color="Building type", 
+                                            title= metric_name, 
+                                            labels={"Value": unit, "Year": "Year", "Building type": "Building type"},
+                                            markers=True)
+
+                                # Set the line styles for median and other models
+                                fig.update_traces(line=dict(color="grey"), selector=dict(name="Building type"))
+                                fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median - ALL"),)
+
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display the plot in Streamlit
+                                st.plotly_chart(fig)
+
+                            else:
+                                st.write('Either choose 1 County or 1 Building type')
 
                         
                         if dataset_name == "Chemical":
@@ -376,7 +446,7 @@ if st.session_state["page"] == "Home":
                 datasets_info2 = {
                     "FINZ-1": {
                         "file_path": "FINZ.xlsx",
-                        "filter_columns": ["Variable", "Scenario"],
+                        "filter_columns": ["Variable", "scen_id"],
                         "remove_columns": [],
                         "apply_year_filter": False
                     },
@@ -396,7 +466,8 @@ if st.session_state["page"] == "Home":
                             file_path = dataset_info2["file_path"]
                             remove_cols = dataset_info2['remove_columns']
                             df = pd.read_excel(file_path,sheet_name='FINZ_NGFS')
-                            st.dataframe(df, hide_index=True)
+                            st.write("### Data Preview")
+                            st.dataframe(df.head(), hide_index=True)
                             col1, col2 = st.columns([1, 5])
                             categorical_columns = dataset_info2["filter_columns"]
                             # Identify year columns (assuming they are numeric)
@@ -480,7 +551,7 @@ if st.session_state["page"] == "Home":
                                 df[year_columns] = df[year_columns].apply(pd.to_numeric, errors='coerce')
 
                                 # Reshape data from wide to long format
-                                df_melted = df.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                                df_melted = df.melt(id_vars=["scen_id", "Model" ,"Scenario", "Region", "Variable", "Unit"], 
                                                         value_vars=year_columns, 
                                                         var_name="Year", value_name="Value")
                                 
@@ -489,14 +560,22 @@ if st.session_state["page"] == "Home":
                                 df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
                                 df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
 
+                                median_values = df_melted.groupby('Year')['Value'].median().reset_index()
+                                median_values['Scenario'] = 'Median'
+
+                                df_melted = pd.concat([df_melted,median_values])
+
                                 if df_melted["Unit"].nunique()==1:
                                     unit = df_melted["Unit"].unique()[0]
                                 else: unit='Unit (Mixed)'
+                                if df_melted["Variable"].nunique()==1:
+                                    title_val = df_melted["Variable"].unique()[0]
+                                else: title_val='Multiple Variables'
                                 
                                 # Plotly line chart with multiple lines for different models
-                                fig = px.line(df_melted, x="Year", y="Value", color='Scenario',
-                                            #title=f'"{title_val}" - Trend Comparison',
-                                            labels={"Value": unit, "Year": "Year", "Scenario": "Scenario"},
+                                fig = px.line(df_melted, x="Year", y="Value", color='scen_id',
+                                            title=f'"{title_val}" - Trend Comparison',
+                                            labels={"Value": unit, "Year": "Year", "scen_id": "scen_id"},
                                             markers=True)  # Add markers to check if points are plotted
                                 
                                 fig.update_xaxes(type="linear",)
@@ -510,7 +589,8 @@ if st.session_state["page"] == "Home":
                             file_path = dataset_info2["file_path"]
                             remove_cols = dataset_info2['remove_columns']
                             df = pd.read_excel(file_path,sheet_name='FINZ_OECM')
-                            st.dataframe(df, hide_index=True)
+                            st.write("### Data Preview")
+                            st.dataframe(df.head(), hide_index=True)
                             col1, col2 = st.columns([1, 5])
                             categorical_columns = dataset_info2["filter_columns"]
                             # Identify year columns (assuming they are numeric)
@@ -587,36 +667,40 @@ if st.session_state["page"] == "Home":
                                 year_columns = [(col) for col in df.columns if str(col).isdigit()]
                                 year_columns = sorted(year_columns, key=int)
  
-                            df.fillna(0, inplace=True)
+                                df.fillna(0, inplace=True)
 
-                            # Ensure year columns are numeric
-                            df[year_columns] = df[year_columns].apply(pd.to_numeric, errors='coerce')
+                                # Ensure year columns are numeric
+                                df[year_columns] = df[year_columns].apply(pd.to_numeric, errors='coerce')
 
-                            # Reshape data from wide to long format
-                            df_melted = df.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
-                                                    value_vars=year_columns, 
-                                                    var_name="Year", value_name="Value")
+                                # Reshape data from wide to long format
+                                df_melted = df.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                                                        value_vars=year_columns, 
+                                                        var_name="Year", value_name="Value")
+                                    
+                                #df_melted = df_melted.groupby(['Variable','Region','Year'])['Value'].median().reset_index()
+                                # Convert Year column to integer
+                                df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
+                                df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                else: unit='Unit (Mixed)'
+                                if df_melted["Variable"].nunique()==1:
+                                    title_val = df_melted["Variable"].unique()[0]
+                                else: title_val='Multiple Variables'
                                 
-                            #df_melted = df_melted.groupby(['Variable','Region','Year'])['Value'].median().reset_index()
-                            # Convert Year column to integer
-                            df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
-                            df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
-                            if df_melted["Unit"].nunique()==1:
-                                unit = df_melted["Unit"].unique()[0]
-                            else: unit='Unit (Mixed)'
-                            
-                            # Plotly line chart with multiple lines for different models
-                            fig = px.line(df_melted, x="Year", y="Value", color='Region',
-                                        #title=f'"{title_val}" - Trend Comparison',
-                                        labels={"Value": unit, "Year": "Year", "Region": "Region"},
-                                        markers=True)  # Add markers to check if points are plotted
-                            
-                            fig.update_xaxes(type="linear",)
-                            # Set chart height
-                            fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
-                            # Display chart in Streamlit
-                            st.plotly_chart(fig, use_container_width=True)
-                            
+                                
+                                # Plotly line chart with multiple lines for different models
+                                fig = px.line(df_melted, x="Year", y="Value", color='Region',
+                                            title=f'"{title_val}" - Trend Comparison',
+                                            labels={"Value": unit, "Year": "Year", "Region": "Region"},
+                                            markers=True)  # Add markers to check if points are plotted
+                                
+                                fig.update_xaxes(type="linear",)
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display chart in Streamlit
+                                st.plotly_chart(fig, use_container_width=True)
+                                
 
 
 
