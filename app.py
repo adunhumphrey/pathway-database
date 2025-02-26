@@ -66,23 +66,25 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-# Create columns for buttons at the top-right
-col1, col2, col3 = st.columns([8, 0.8, 1])  # Adjust column width for spacing
+# Initialize "page" in session state to "Home" if not already set
+if "page" not in st.session_state:
+    st.session_state["page"] = "Home"  # This ensures Home is the default page
 
+# Create layout with two buttons (Home and Reference)
+col1, col2, col3 = st.columns([8, 0.6, 1]) 
+# Button for "Home" page
 with col2:
     if st.button("Home"):
-        st.session_state["page"] = "Page 1"
+        st.session_state["page"] = "Home"  # Set to Home when clicked
 
+# Button for "Reference" page
 with col3:
     if st.button("Reference"):
-        st.session_state["page"] = "Reference"
+        st.session_state["page"] = "Reference"  # Set to Reference when clicked
 
-# Default page selection
-if "page" not in st.session_state:
-    st.session_state["page"] = "Home"
-
-# Display content based on the selected page
-if st.session_state["page"] == "Page 1":
+# Display the content based on the selected page
+if st.session_state["page"] == "Home":
+    #"
     # Streamlit UI
     # Display logo and title
     col1, col2 = st.columns([1, 5])
@@ -94,7 +96,7 @@ if st.session_state["page"] == "Page 1":
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
     # Define tabs for multiple data sources
-    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Industry","FINZ","Others"])
+    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Oil & Gas","FINZ","Others"])
 
     # File paths and filter columns for different datasets
     datasets_info = {
@@ -123,28 +125,28 @@ if st.session_state["page"] == "Page 1":
             "apply_year_filter": False
         },
         "Building": {
-            "file_path": "Alldata2.xlsx",
-            "filter_columns": ["Model", "Scenario"],
+            "file_path": "buildings.xlsx",
+            "filter_columns": ["Target type", "Scope / Emissions boundary",	"Unit", "Geography","Country", "Building type"],
             "remove_columns": [],
             "apply_year_filter": False
         },
-        "Industry": {
-            "file_path": "Alldata3.xlsx",
-            "filter_columns": ["Model", "Scenario"],
-            "remove_columns": [],
-            "apply_year_filter": False
-        },
-        "FINZ": {
-            "file_path": "FINZ.xlsx",
-            "filter_columns": ["Model", "Scenario", "Region", "Variable", "Unit"],
+        "Oil & Gas": {
+            "file_path": "Oil & Gas.xlsx",
+            "filter_columns": ["Model", "Scenario", "Variable", "Unit"],
             "remove_columns": [],
             "apply_year_filter": False},
+        
+        "FINZ": {
+            "file_path": "FINZ.xlsx",
+            "filter_columns": ["Model", "Scenario"],
+            "remove_columns": [],
+            "apply_year_filter": False
+            },
         "Others": {
             "file_path": "Phase-Out.xlsx",
             "filter_columns": ["Model", "Scenario"],
             "remove_columns": [],
-            "apply_year_filter": False
-        }
+            "apply_year_filter": False}
 
     }
 
@@ -156,7 +158,7 @@ if st.session_state["page"] == "Page 1":
         # Document Tab
 
         with tab:
-            if dataset_name not in ["Others"]:
+            if dataset_name not in ["Others","FINZ"]:
                 st.subheader(f"View and Filter {dataset_name}")
                 
                 # Load data preview (first 1000 rows only)
@@ -245,7 +247,7 @@ if st.session_state["page"] == "Page 1":
                         year_columns = [(col) for col in df_full.columns if str(col).isdigit()]
                         year_columns = sorted(year_columns, key=int)
 
-                        if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways" or dataset_name=="FINZ":
+                        if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways" or dataset_name=="Oil & Gas":
                             #st.write("### Visualizing Data")
                             
                             df_model = df_full.copy()
@@ -255,7 +257,7 @@ if st.session_state["page"] == "Page 1":
                             df_model[year_columns] = df_model[year_columns].apply(pd.to_numeric, errors='coerce')
 
                             # Reshape data from wide to long format
-                            df_melted = df_model.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                            df_melted = df_model.melt(id_vars=filter_columns,
                                                     value_vars=year_columns, 
                                                     var_name="Year", value_name="Value")
                             
@@ -268,24 +270,34 @@ if st.session_state["page"] == "Page 1":
                             median_values['Scenario'] = 'Median'
 
                             # Combine the original data with the median data
-                            df_combined = pd.concat([df_melted, median_values])
+                            if dataset_name!='Oil & Gas':
+                                df_combined = pd.concat([df_melted, median_values])
+                            else:
+                                df_combined = pd.concat([df_melted])
+
                             df_combined.dropna(subset=["Value"], inplace=True)
                             df_combined = df_combined[df_combined['Value']!=0]
 
                             if df_combined["Unit"].nunique()==1:
                                 unit = df_combined["Unit"].unique()[0]
                             else: unit='Unit (Mixed)'
+
+                            if df_combined["Variable"].nunique()==1:
+                                title_val = df_combined["Variable"].unique()[0]
+                            else: title_val='Multiple Variables'
+                            
                             
                             # Plotly line chart with multiple lines for different models
                             fig = px.line(df_combined, x="Year", y="Value", color="Scenario",
-                                        #title="Trend Comparison of Selected Models",
+                                        title=f'"{title_val}" - Trend Comparison',
                                         labels={"Value": unit, "Year": "Year", "Scenario": "Scenario"},
                                         markers=True)  # Add markers to check if points are plotted
                             
                             fig.update_xaxes(type="linear",)
                             # Set chart height
                             fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
-                            fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median"),)
+                            if dataset_name!='Oil & Gas':
+                                fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median"),)
 
                             st.plotly_chart(fig)      
 
@@ -359,10 +371,258 @@ if st.session_state["page"] == "Page 1":
 
                                 # Display chart in Streamlit
                                 st.plotly_chart(fig, use_container_width=True)
+            elif dataset_name == "FINZ" :
+                # File paths and filter columns for different datasets
+                datasets_info2 = {
+                    "FINZ-1": {
+                        "file_path": "FINZ.xlsx",
+                        "filter_columns": ["Variable", "Scenario"],
+                        "remove_columns": [],
+                        "apply_year_filter": False
+                    },
+                     "FINZ-2": {
+                        "file_path": "FINZ.xlsx",
+                        "filter_columns": ["Variable", "Region"],
+                        "remove_columns": [],
+                        "apply_year_filter": False
+                    } }
+                tab2 = st.tabs(["FINZ-1", "FINZ-2"])
+                # Iterate over each tab and display corresponding data
+                for idx, tab in enumerate(tab2):
+                    dataset_name = list(datasets_info2.keys())[idx]
+                    dataset_info2 = datasets_info2[dataset_name]
+                    with tab:
+                        if dataset_name=="FINZ-1":
+                            file_path = dataset_info2["file_path"]
+                            remove_cols = dataset_info2['remove_columns']
+                            df = pd.read_excel(file_path,sheet_name='FINZ_NGFS')
+                            st.dataframe(df, hide_index=True)
+                            col1, col2 = st.columns([1, 5])
+                            categorical_columns = dataset_info2["filter_columns"]
+                            # Identify year columns (assuming they are numeric)
+                            year_columns = [(col) for col in df.columns if str(col).isdigit()]
+                            year_columns = sorted(year_columns, key=int)
+
+                            # Filtering UI based on the full data columns (not preview)
+                            st.write("### Filter Data")
+                            filters = {}
+                            filter_columns = dataset_info2["filter_columns"]
+                            cols = st.columns(len(filter_columns))
+
+                            selected_values = {}  # For storing selected filter values
+                            
+                            # Update filter options dynamically based on previous selections
+                            # Update filter options dynamically based on previous selections
+                            for i, col in enumerate(filter_columns):
+                                if col in df.columns:
+                                    options = df[col].astype(str).unique().tolist()
+                                    selected_values[col] = cols[i].multiselect(f"{col}", options, key=f"{col}")
+
+                            # Apply the filter to the dataset
+                            for col, values in selected_values.items():
+                                if values:  # Ensure selections are made
+                                    df = df[df[col].astype(str).str.lower().isin([v.lower() for v in values])]
+                            
+                            # Add year range filters for 'AllData' dataset or any dataset requiring year filtering
+                            if dataset_info["apply_year_filter"]:
+                                # Get list of years from the dataset
+                                year_columns = [str(col) for col in df.columns if str(col).isdigit()]
+                                year_columns = sorted(year_columns, key=int)  # Sort years in ascending order
+
+                                # Dropdown for Start Year
+                                start_year = st.selectbox(
+                                    "Select Start Year:",
+                                    options=year_columns,
+                                    index=0,  # Default to the first year
+                                    key=f"start_year_{dataset_name}_{idx}"
+                                )
+
+                                # Dropdown for End Year
+                                end_year = st.selectbox(
+                                    "Select End Year:",
+                                    options=year_columns,
+                                    index=len(year_columns)-1,  # Default to the last year
+                                    key=f"end_year_{dataset_name}_{idx}"
+                                )
+
+                                # Ensure end year is greater than or equal to start year
+                                if int(end_year) < int(start_year):
+                                    st.error("End Year must be greater than or equal to Start Year.")
+                                    end_year = start_year
+
+                                # Apply the year filter to the dataset
+                                df = filter_by_year(df, filter_columns, int(start_year), int(end_year))
+
+                            # Button to load full data and apply filters
+                            if st.button("Apply Filters", key=f"apply_filters_{dataset_name}_{idx}"):
+                                # Show filtered data
+                                st.write(f"### Filtered Data {dataset_name}")
+                                st.dataframe(df.head(100), hide_index=True)
+
+                                # Button to download filtered data
+                                excel_data = to_excel(df_full)
+                                st.download_button(
+                                    label="Download Excel",
+                                    data=excel_data,
+                                    file_name=f"{dataset_name}_filtered_data.xlsx",
+                                    mime="application/vnd.ms-excel",
+                                    key=f"download_button_{dataset_name}_{idx}"  # Ensure unique key for download button
+                                )
+
+                                # Identify year columns (assuming they are numeric)
+                                year_columns = [(col) for col in df.columns if str(col).isdigit()]
+                                year_columns = sorted(year_columns, key=int)
+
+
+                                df.fillna(0, inplace=True)
+
+                                # Ensure year columns are numeric
+                                df[year_columns] = df[year_columns].apply(pd.to_numeric, errors='coerce')
+
+                                # Reshape data from wide to long format
+                                df_melted = df.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                                                        value_vars=year_columns, 
+                                                        var_name="Year", value_name="Value")
+                                
+                                #df_melted = df_melted.groupby(['Variable','Region','Year'])['Value'].median().reset_index()
+                                # Convert Year column to integer
+                                df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
+                                df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
+
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                else: unit='Unit (Mixed)'
+                                
+                                # Plotly line chart with multiple lines for different models
+                                fig = px.line(df_melted, x="Year", y="Value", color='Scenario',
+                                            #title=f'"{title_val}" - Trend Comparison',
+                                            labels={"Value": unit, "Year": "Year", "Scenario": "Scenario"},
+                                            markers=True)  # Add markers to check if points are plotted
+                                
+                                fig.update_xaxes(type="linear",)
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display chart in Streamlit
+                                st.plotly_chart(fig, use_container_width=True)
+                        
+                        else:  #dataset_name=="FINZ-1":
+                            
+                            file_path = dataset_info2["file_path"]
+                            remove_cols = dataset_info2['remove_columns']
+                            df = pd.read_excel(file_path,sheet_name='FINZ_OECM')
+                            st.dataframe(df, hide_index=True)
+                            col1, col2 = st.columns([1, 5])
+                            categorical_columns = dataset_info2["filter_columns"]
+                            # Identify year columns (assuming they are numeric)
+                            year_columns = [(col) for col in df.columns if str(col).isdigit()]
+                            year_columns = sorted(year_columns, key=int)
+
+                            # Filtering UI based on the full data columns (not preview)
+                            st.write("### Filter Data")
+                            filters = {}
+                            filter_columns = dataset_info2["filter_columns"]
+                            cols = st.columns(len(filter_columns))
+
+                            selected_values = {}  # For storing selected filter values
+                            
+                            # Update filter options dynamically based on previous selections
+                            # Update filter options dynamically based on previous selections
+                            for i, col in enumerate(filter_columns):
+                                if col in df.columns:
+                                    options = df[col].astype(str).unique().tolist()
+                                    selected_values[col] = cols[i].multiselect(f"{col}", options,)
+
+                            # Apply the filter to the dataset
+                            for col, values in selected_values.items():
+                                if values:  # Ensure selections are made
+                                    df = df[df[col].astype(str).str.lower().isin([v.lower() for v in values])]
+
+                            # Add year range filters for 'AllData' dataset or any dataset requiring year filtering
+                            if dataset_info["apply_year_filter"]:
+                                # Get list of years from the dataset
+                                year_columns = [str(col) for col in df.columns if str(col).isdigit()]
+                                year_columns = sorted(year_columns, key=int)  # Sort years in ascending order
+
+                                # Dropdown for Start Year
+                                start_year = st.selectbox(
+                                    "Select Start Year:",
+                                    options=year_columns,
+                                    index=0,  # Default to the first year
+                                    key=f"start_year_{dataset_name}_{idx}"
+                                )
+
+                                # Dropdown for End Year
+                                end_year = st.selectbox(
+                                    "Select End Year:",
+                                    options=year_columns,
+                                    index=len(year_columns)-1,  # Default to the last year
+                                    key=f"end_year_{dataset_name}_{idx}"
+                                )
+
+                                # Ensure end year is greater than or equal to start year
+                                if int(end_year) < int(start_year):
+                                    st.error("End Year must be greater than or equal to Start Year.")
+                                    end_year = start_year
+
+                                # Apply the year filter to the dataset
+                                df = filter_by_year(df, filter_columns, int(start_year), int(end_year))
+
+                            # Button to load full data and apply filters
+                            if st.button("Apply Filters", key=f"apply_filters_{dataset_name}_{idx}"):
+                                # Show filtered data
+                                st.write(f"### Filtered Data {dataset_name}")
+                                st.dataframe(df.head(100), hide_index=True)
+
+                                # Button to download filtered data
+                                excel_data = to_excel(df_full)
+                                st.download_button(
+                                    label="Download Excel",
+                                    data=excel_data,
+                                    file_name=f"{dataset_name}_filtered_data.xlsx",
+                                    mime="application/vnd.ms-excel",
+                                    key=f"download_button_{dataset_name}_{idx}"  # Ensure unique key for download button
+                                )
+
+                                # Identify year columns (assuming they are numeric)
+                                year_columns = [(col) for col in df.columns if str(col).isdigit()]
+                                year_columns = sorted(year_columns, key=int)
+ 
+                            df.fillna(0, inplace=True)
+
+                            # Ensure year columns are numeric
+                            df[year_columns] = df[year_columns].apply(pd.to_numeric, errors='coerce')
+
+                            # Reshape data from wide to long format
+                            df_melted = df.melt(id_vars=["Model", "Scenario", "Region", "Variable", "Unit"], 
+                                                    value_vars=year_columns, 
+                                                    var_name="Year", value_name="Value")
+                                
+                            #df_melted = df_melted.groupby(['Variable','Region','Year'])['Value'].median().reset_index()
+                            # Convert Year column to integer
+                            df_melted["Year"] = pd.to_numeric(df_melted["Year"], errors='coerce')
+                            df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
+                            if df_melted["Unit"].nunique()==1:
+                                unit = df_melted["Unit"].unique()[0]
+                            else: unit='Unit (Mixed)'
+                            
+                            # Plotly line chart with multiple lines for different models
+                            fig = px.line(df_melted, x="Year", y="Value", color='Region',
+                                        #title=f'"{title_val}" - Trend Comparison',
+                                        labels={"Value": unit, "Year": "Year", "Region": "Region"},
+                                        markers=True)  # Add markers to check if points are plotted
+                            
+                            fig.update_xaxes(type="linear",)
+                            # Set chart height
+                            fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                            # Display chart in Streamlit
+                            st.plotly_chart(fig, use_container_width=True)
+                            
+
+
 
             elif dataset_name == "Others" :
                 # File paths and filter columns for different datasets
-                datasets_info = {
+                datasets_info3 = {
                     "Phase-Out": {
                         "file_path": "Phase-Out.xlsx",
                         "filter_columns": ["Model", "Scenario"],
@@ -375,21 +635,21 @@ if st.session_state["page"] == "Page 1":
                         "remove_columns": [],
                         "apply_year_filter": False
                     } }
-                tab2 = st.tabs(["Phase-Out", "Residuals"])
+                tab3 = st.tabs(["Phase-Out", "Residuals"])
                 # Iterate over each tab and display corresponding data
-                for idx, tab in enumerate(tab2):
-                    dataset_name = list(datasets_info.keys())[idx]
-                    dataset_info = datasets_info[dataset_name]
+                for idx, tab in enumerate(tab3):
+                    dataset_name = list(datasets_info3.keys())[idx]
+                    dataset_info3 = datasets_info3[dataset_name]
                     with tab:
                         if dataset_name=="Phase-Out":
-                            file_path = dataset_info["file_path"]
-                            remove_cols = dataset_info['remove_columns']
+                            file_path = dataset_info3["file_path"]
+                            remove_cols = dataset_info3['remove_columns']
                             df = pd.read_excel(file_path,sheet_name='Phase out dates',skiprows=3)
                             st.dataframe(df, hide_index=True)
                         
                         else:
-                            file_path = dataset_info["file_path"]
-                            remove_cols = dataset_info['remove_columns']
+                            file_path = dataset_info3["file_path"]
+                            remove_cols = dataset_info3['remove_columns']
                             df = pd.read_excel(file_path,sheet_name='Residuals',skiprows=2)
                             st.dataframe(df, hide_index=True)
                             
@@ -460,7 +720,7 @@ elif st.session_state["page"] == "Reference":
                 with col1:
                         
                     for col in categorical_columns:
-                        if st.button(col):
+                        if st.button(str(df[col].nunique())+" "+col):
                             st.session_state["selected_var"] = col  # Store selection persistently
 
                 # Right Column: Display unique values
@@ -478,7 +738,7 @@ elif st.session_state["page"] == "Reference":
                             
                         # Convert to DataFrame and display
                         unique_df = pd.DataFrame(filtered_values, columns=[selected_var]).reset_index()
-                        st.write(f'{unique_df[selected_var].nunique()}, unique {selected_var}')
+                        #st.write(f'{unique_df[selected_var].nunique()}, unique {selected_var}')
                         st.dataframe(unique_df[selected_var].values, use_container_width=True, height=600)  # Full-width display
 
 
@@ -487,9 +747,8 @@ elif st.session_state["page"] == "Reference":
                 file_path = dataset_info["file_path"]
                 remove_cols = dataset_info['remove_columns']
                 df = load_full_data(file_path,None, None)
-                st.write('Here, we show the principed-driven criteria used to filter scenarios retrieved from literature')
-                st.write('These filters are informed by the guiding principles of the SBTi in its foundational science. These principles address ambition, responsibility, scientific rigor, actionability, robustness, and transparency.')
-                st.write('Further details on how SBTi applies science in its pathway development can be found HERE')
+                st.write('This sheet shows the phase out dates for some fossil commodities')
+                st.write('Disclaimer: The sector-specific requirements for key economic activities are derived from specific scenarios e.g IEA to provide additional guidelines on how activities need to transition at interim period on the way to net zero. The activity specific milestones are not available in all IPCC scenarios and there may be wide variations across  IPCC models. Therefore, the granularity that IEA provides for these indicators are useful, even though they may not align with the assumptions from the overall IPCC scenarios.')
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
