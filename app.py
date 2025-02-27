@@ -561,7 +561,7 @@ if st.session_state["page"] == "Home":
                                 df_melted["Value"] = pd.to_numeric(df_melted["Value"], errors='coerce')
 
                                 median_values = df_melted.groupby('Year')['Value'].median().reset_index()
-                                median_values['Scenario'] = 'Median'
+                                median_values['scen_id'] = 'Median'
 
                                 df_melted = pd.concat([df_melted,median_values])
 
@@ -581,6 +581,7 @@ if st.session_state["page"] == "Home":
                                 fig.update_xaxes(type="linear",)
                                 # Set chart height
                                 fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                fig.update_traces(line=dict(color="black", width=4), selector=dict(name="Median"),)
                                 # Display chart in Streamlit
                                 st.plotly_chart(fig, use_container_width=True)
                         
