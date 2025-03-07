@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
+import os
+import base64
 from io import BytesIO
 import plotly.express as px
+ 
 
 # Set page title and wide layout
 st.set_page_config(page_title="My Streamlit App", layout="wide")
@@ -66,6 +69,25 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
+import streamlit as st
+
+# Inject custom CSS to apply a background color with opacity to the margin area
+st.markdown("""
+    <style>
+    /* Apply grey background with opacity to the margin area (outer portion) */
+    .reportview-container {
+        background-color: rgba(77, 73, 73, 0.1);  /* Grey with 50% opacity */
+        padding: 30px;  /* Add padding around the content */
+    }
+
+    /* Keep content area white with no opacity */
+    .main {
+        background-color: rgba(11, 11, 11, 0.1);  /* Keep content area white */
+        margin: 50px;  /* No padding inside the content area */
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Initialize "page" in session state to "Home" if not already set
 if "page" not in st.session_state:
     st.session_state["page"] = "Home"  # This ensures Home is the default page
@@ -82,21 +104,148 @@ with col3:
     if st.button("Reference"):
         st.session_state["page"] = "Reference"  # Set to Reference when clicked
 
+
+
+image_path = "background.jpg"  # Specify the image path
+with open(image_path, "rb") as image_file:
+    image_base64 = base64.b64encode(image_file.read()).decode()
+
+# Custom CSS to set the background image with size and opacity for just the background
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        position: absolute;
+        width: 100%;
+        height: 100vh;  /* Ensure it takes full viewport height */
+    }}
+
+    .stApp::before {{
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/jpeg;base64,{image_base64}");
+        background-size: cover;  /* Change to cover for better scaling */
+        background-position: center center;
+        background-repeat: no-repeat;
+        z-index: -1; /* Make sure content is above the background */
+        opacity: 0.9; /* Set opacity for the background image */
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # Display the content based on the selected page
 if st.session_state["page"] == "Home":
+
     #"
     # Streamlit UI
     # Display logo and title
     col1, col2 = st.columns([1, 5])
     with col1:
-        st.image("SBT_Logo.jpg", width=100)
+
+        st.image("SBT_Logo.png", width=300)  # Set both width and height
+
     with col2:
-        st.title("Pathway Explorer")
+        # Add custom styles for tooltips
+        st.markdown(
+            """
+            <style>
+            /* Tooltip styling for title */
+            .title-tooltip {
+                position: relative;
+                display: inline-block;
+                cursor: pointer;
+            }
+
+            /* Tooltip text */
+            .title-tooltip:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.7); /* Dark background for the tooltip */
+                color: white;
+                padding: 5px;
+                border-radius: 5px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 1;  /* Ensure tooltip is above */
+                opacity: 1;
+                transition: opacity 0.3s;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Add the title with a tooltip
+        st.markdown(
+            """
+            <style>
+            .title-tooltip {
+                position: relative;
+                top: 50px;   /* Moves the text down */
+                left: 100px; /* Moves the text to the right */
+                text-align: right;  /* Aligns the text to the right */
+            }
+            </style>
+            <div class="title-tooltip" data-tooltip="Explore various pathways for climate action">
+                <span style="font-size: 48px; font-weight: bold;">Pathway Explorer</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+            
 
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
+    # Add custom CSS to style the tabs with the same background color
+    st.markdown(
+        """
+        <style>
+        /* Style for the tab container to ensure even distribution */
+        .stTabs [data-baseweb="tablist"] {
+            display: flex;
+            justify-content: flex-start;  /* Align tabs to the left without extra space */
+            gap: 5px;  /* Reduced space between tabs */
+        }
+
+        /* Style for each individual tab */
+        .stTabs [data-baseweb="tab"] {
+            background-color:rgb(42,52,68);  /* Green background for all tabs */
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            flex-grow: 0;  /* Ensure tabs are not stretched */
+        }
+
+        /* Style for tab when hovered */
+        .stTabs [data-baseweb="tab"]:hover {
+            background-color:rgb(211, 151, 133);  /* Darker green when hovered */
+            cursor: pointer;  /* Change cursor to pointer when hovered */
+        }
+
+        /* Style for active tab (clicked tab) */
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            background-color:rgb(234,137,71);  /* Dark green when tab is selected */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Define tabs for multiple data sources
     tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Oil & Gas","FINZ","Others"])
+
 
     # File paths and filter columns for different datasets
     datasets_info = {
@@ -179,6 +328,7 @@ if st.session_state["page"] == "Home":
                     # Filtering UI based on the full data columns (not preview)
                     st.write("### Filter Data")
                     filters = {}
+                    
                     filter_columns = dataset_info["filter_columns"]
                     cols = st.columns(len(filter_columns))
 
@@ -186,6 +336,7 @@ if st.session_state["page"] == "Home":
                     
                     # Update filter options dynamically based on previous selections
                     # Update filter options dynamically based on previous selections
+                    
                     for i, col in enumerate(filter_columns):
                         if col in df_full.columns:
                             options = df_full[col].astype(str).unique().tolist()
@@ -357,9 +508,6 @@ if st.session_state["page"] == "Home":
                             median_values['Model'] = 'Median - ALL'
                             median_values['Scenario'] = 'Median - ALL'
                             median_values['scen_id'] = 'Median - ALL'
-
-                            
-                            
                             
                             
                             if df_melted["Building type"].nunique()==1:
@@ -748,9 +896,76 @@ elif st.session_state["page"] == "Reference":
     # Display logo and title
     col1, col2 = st.columns([1, 5])
     with col1:
-        st.image("SBT_Logo.jpg", width=100)
+        # Define the path to your local background image
+        background_image_path = r"C:\Users\puroh\Downloads\PIXNIO-350667-4130x2309 (2).jpg"
+
+        # Add custom CSS to set the background image
+        st.markdown(
+            f"""
+            <style>
+            body {{
+                background-image: url('file:///{background_image_path}');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        st.image("SBT_Logo.jpg", width=300)  # Set both width and height
+
     with col2:
-        st.title("Pathway Explorer")
+        # Add custom styles for tooltips
+        st.markdown(
+            """
+            <style>
+            /* Tooltip styling for title */
+            .title-tooltip {
+                position: relative;
+                display: inline-block;
+                cursor: pointer;
+            }
+
+            /* Tooltip text */
+            .title-tooltip:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.7); /* Dark background for the tooltip */
+                color: white;
+                padding: 5px;
+                border-radius: 5px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 1;  /* Ensure tooltip is above */
+                opacity: 1;
+                transition: opacity 0.3s;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Add the title with a tooltip
+        st.markdown(
+            """
+            <style>
+            .title-tooltip {
+                position: relative;
+                top: 50px;   /* Moves the text down */
+                left: 100px; /* Moves the text to the right */
+                text-align: right;  /* Aligns the text to the right */
+            }
+            </style>
+            <div class="title-tooltip" data-tooltip="Explore various pathways for climate action">
+                <span style="font-size: 48px; font-weight: bold;">Pathway Explorer</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
