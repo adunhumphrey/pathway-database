@@ -219,22 +219,7 @@ if st.session_state["page"] == "Home":
             """,
             unsafe_allow_html=True
         )
-        st.markdown(
-            """
-            <style>
-            .title-tooltip {
-                position: relative;
-                top: 50px;   /* Moves the text down */
-                left: 100px; /* Moves the text to the right */
-                text-align: right;  /* Aligns the text to the right */
-            }
-            </style>
-            <div class="title-tooltip" data-tooltip="Explore various pathways for IPCC">
-                <span style="font-size: 48px; font-weight: bold;">IPCC</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+            
 
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
     # Add custom CSS to style the tabs with the same background color
