@@ -1110,7 +1110,7 @@ elif st.session_state["page"] == "Document":
         st.title("How SBTi use science")
 
         # Local file path (Replace this with your actual path)
-        pdf_path = r"\documents\sample.pdf"
+        pdf_path = "documents/sample.pdf"
 
 
         if os.path.exists(pdf_path):
