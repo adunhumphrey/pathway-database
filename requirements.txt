@@ -6,3 +6,11 @@ pyxlsb
 XlsxWriter==3.2.0
 polars
 fastexcel
+docx
+streamlit_pdf_viewer 
+streamlit python-docx
+exceptions
+tools
+frontend
+fitz
+fastexcel
