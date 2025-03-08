@@ -1110,7 +1110,7 @@ elif st.session_state["page"] == "Document":
         st.title("PDF Viewer")
 
         # Local file path (Replace this with your actual path)
-        pdf_path = r"C:\Users\puroh\OneDrive\Documents\GitHub\Data Extract from Web\dataextract\documents\sample.pdf"
+        pdf_path = r"\documents\sample.pdf"
 
 
         if os.path.exists(pdf_path):
