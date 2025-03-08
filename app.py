@@ -2,12 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 import base64
-import docx
 from io import BytesIO
-from io import BytesIO
-from streamlit import session_state as ss
 import plotly.express as px
-from streamlit_pdf_viewer import pdf_viewer
  
 
 # Set page title and wide layout
@@ -92,34 +88,21 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Initialize session state for active page
+# Initialize "page" in session state to "Home" if not already set
 if "page" not in st.session_state:
-    st.session_state["page"] = "Home"  # Default active page
+    st.session_state["page"] = "Home"  # This ensures Home is the default page
 
-# Function to update session state and rerun
-def set_page(page_name):
-    st.session_state["page"] = page_name
-    st.rerun()  # Forces UI to update immediately
-
-# Create column layout
-col1, col2, col3, col4 = st.columns([7, 1, 1, 1])
-
-# Render buttons with conditional highlighting
+# Create layout with two buttons (Home and Reference)
+col1, col2, col3 = st.columns([8, 0.6, 1]) 
+# Button for "Home" page
 with col2:
-    if st.button("Home", use_container_width=True, 
-                 type="primary" if st.session_state["page"] == "Home" else "secondary"):
-        set_page("Home")
+    if st.button("Home"):
+        st.session_state["page"] = "Home"  # Set to Home when clicked
 
+# Button for "Reference" page
 with col3:
-    if st.button("Reference", use_container_width=True, 
-                 type="primary" if st.session_state["page"] == "Reference" else "secondary"):
-        set_page("Reference")
-
-with col4:
-    if st.button("Document", use_container_width=True, 
-                 type="primary" if st.session_state["page"] == "Document" else "secondary"):
-        set_page("Document")
-
+    if st.button("Reference"):
+        st.session_state["page"] = "Reference"  # Set to Reference when clicked
 
 
 
@@ -986,42 +969,6 @@ elif st.session_state["page"] == "Reference":
 
     st.write("Here you can find all the raw data, eligible scenarios and pathways that informs the cross sector and sector-specific standards in the SBTi")
 
-    st.markdown(
-        """
-        <style>
-        /* Style for the tab container to ensure even distribution */
-        .stTabs [data-baseweb="tablist"] {
-            display: flex;
-            justify-content: flex-start;  /* Align tabs to the left without extra space */
-            gap: 5px;  /* Reduced space between tabs */
-        }
-
-        /* Style for each individual tab */
-        .stTabs [data-baseweb="tab"] {
-            background-color:rgb(42,52,68);  /* Green background for all tabs */
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            flex-grow: 0;  /* Ensure tabs are not stretched */
-        }
-
-        /* Style for tab when hovered */
-        .stTabs [data-baseweb="tab"]:hover {
-            background-color:rgb(211, 151, 133);  /* Darker green when hovered */
-            cursor: pointer;  /* Change cursor to pointer when hovered */
-        }
-
-        /* Style for active tab (clicked tab) */
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background-color:rgb(234,137,71);  /* Dark green when tab is selected */
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
     # Define tabs for multiple data sources
     tabs = st.tabs(["Document", "Criteria"])
 
@@ -1105,26 +1052,4 @@ elif st.session_state["page"] == "Reference":
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
-elif st.session_state["page"] == "Document":
- # Redirect to document page
-        st.title("PDF Viewer")
 
-        # Local file path (Replace this with your actual path)
-        pdf_path = r"C:\Users\puroh\OneDrive\Documents\GitHub\Data Extract from Web\dataextract\documents\sample.pdf"
-
-
-        if os.path.exists(pdf_path):
-            with open(pdf_path, "rb") as f:
-                ss.pdf_ref = f.read()  # Store binary content
-        else:
-            st.error("File not found. Please check the path.")
-            ss.pdf_ref = None
-
-        # Display PDF using `streamlit_pdf_viewer`
-        if st.session_state.pdf_ref:
-            pdf_viewer(input=st.session_state.pdf_ref, width="100%")
-            # Download Button
-            st.download_button(label="📥 Download PDF", 
-                            data=ss.pdf_ref, 
-                            file_name="sample.pdf", 
-                            mime="application/pdf")
