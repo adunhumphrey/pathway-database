@@ -117,8 +117,8 @@ with col3:
 
 with col4:
     if st.button("The Science", use_container_width=True, 
-                 type="primary" if st.session_state["page"] == "Document" else "secondary"):
-        set_page("Document")
+                 type="primary" if st.session_state["page"] == "The Science" else "secondary"):
+        set_page("The Science")
 
 
 
