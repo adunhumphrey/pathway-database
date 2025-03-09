@@ -261,7 +261,7 @@ if st.session_state["page"] == "Home":
     )
 
     # Define tabs for multiple data sources
-    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power", "Chemical", "Building", "Oil & Gas","FINZ","FLAG","Aluminium","Cement","Steel","Pulp & Paper", "Other Industries","Others"])
+    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power", "Chemical", "Building", "Oil & Gas","FINZ","FLAG","Aluminium","Cement","Pulp & Paper","Steel", "Other Industries","Others"])
 
 
     # File paths and filter columns for different datasets
