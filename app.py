@@ -116,7 +116,7 @@ with col3:
         set_page("Reference")
 
 with col4:
-    if st.button("Document", use_container_width=True, 
+    if st.button("The Science", use_container_width=True, 
                  type="primary" if st.session_state["page"] == "Document" else "secondary"):
         set_page("Document")
 
