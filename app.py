@@ -309,7 +309,7 @@ if st.session_state["page"] == "Home":
             "apply_year_filter": False
             },
         "FLAG": {
-            "file_path": "FLAG.xlsx",
+            "file_path": "Flag.xlsx",
             "filter_columns": ["Activity", "Region", "Commodity", "Unit"],
             "remove_columns": [],
             "apply_year_filter": False
