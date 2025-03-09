@@ -116,7 +116,7 @@ with col3:
         set_page("Reference")
 
 with col4:
-    if st.button("The Science", use_container_width=True, 
+    if st.button("Document", use_container_width=True, 
                  type="primary" if st.session_state["page"] == "Document" else "secondary"):
         set_page("Document")
 
@@ -261,7 +261,7 @@ if st.session_state["page"] == "Home":
     )
 
     # Define tabs for multiple data sources
-    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Oil & Gas","FINZ","Others"])
+    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Oil & Gas","FINZ","FLAG","Aluminium","Cement","Steel","Pulp & Paper", "Other Industries","Others"])
 
 
     # File paths and filter columns for different datasets
@@ -308,6 +308,42 @@ if st.session_state["page"] == "Home":
             "remove_columns": [],
             "apply_year_filter": False
             },
+        "FLAG": {
+            "file_path": "FLAG.xlsx",
+            "filter_columns": ["Activity", "Region", "Commodity", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
+        "Aluminium": {
+            "file_path": "Aluminium.xlsx",
+            "filter_columns": ["Scenario", "Region", "Variable", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
+        "Cement": {
+            "file_path": "Cement.xlsx",
+            "filter_columns": ["Scenario", "Region", "Variable", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
+        "Pulp & Paper": {
+            "file_path": "Pulp & Paper.xlsx",
+            "filter_columns": ["Scenario", "Region", "Variable", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
+        "Steel": {
+            "file_path": "Steel.xlsx",
+            "filter_columns": ["Scenario", "Region", "Variable", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
+        "Other Industries": {
+            "file_path": "Other Industries.xlsx",
+            "filter_columns": ["Scenario", "Region", "Variable", "Unit"],
+            "remove_columns": [],
+            "apply_year_filter": False
+        },
         "Others": {
             "file_path": "Phase-Out.xlsx",
             "filter_columns": ["Model", "Scenario"],
@@ -415,7 +451,8 @@ if st.session_state["page"] == "Home":
                         year_columns = [(col) for col in df_full.columns if str(col).isdigit()]
                         year_columns = sorted(year_columns, key=int)
 
-                        if dataset_name=="IPCC" or dataset_name=="Cross-Sector Pathways" or dataset_name=="Oil & Gas":
+                        if dataset_name in ("IPCC", "Cross-Sector Pathways", "Oil & Gas", "Aluminium", "Cement","Steel","Pulp & Paper", "Other Industries"):
+
                             #st.write("### Visualizing Data")
                             
                             df_model = df_full.copy()
@@ -438,7 +475,7 @@ if st.session_state["page"] == "Home":
                             median_values['Scenario'] = 'Median'
 
                             # Combine the original data with the median data
-                            if dataset_name!='Oil & Gas':
+                            if dataset_name not in ('Oil & Gas', "Aluminium", "Cement","Steel","Pulp & Paper", "Other Industries"):
                                 df_combined = pd.concat([df_melted, median_values])
                             else:
                                 df_combined = pd.concat([df_melted])
@@ -575,6 +612,62 @@ if st.session_state["page"] == "Home":
                             else:
                                 st.write('Either choose 1 County or 1 Building type')
 
+                        if dataset_name=="FLAG":
+                            #st.write("### Visualizing Data")
+                            # Calculate the median line across all years
+                            #print(df_full.columns)
+                            df_full = df_full[~df_full.apply(lambda row: row.astype(str).str.contains('Median').any(), axis=1)]
+
+                            df_melted = df_full.melt(id_vars=filter_columns, 
+                                                value_vars=[(year) for year in range(2030, 2055, 5)], 
+                                                var_name="Year", value_name="Value")
+                            
+                            
+                            if df_melted["Commodity"].nunique()==1:
+
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                    metric_name = df_melted["Commodity"].unique()[0]
+                                else: 
+                                    unit='Unit (Mixed)'
+                                    metric_name = "Multiple Region"
+                                # Plot the line chart
+                                fig = px.line(df_melted, x="Year", y="Value", color="Region", 
+                                            title= metric_name, 
+                                            labels={"Value": unit, "Year": "Year", "Region": "Region"},
+                                            markers=True)
+
+                                # Set the line styles for median and other models
+                                fig.update_traces(line=dict(color="grey"), selector=dict(name="Region"))
+
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display the plot in Streamlit
+                                st.plotly_chart(fig)
+
+                            elif df_melted["Region"].nunique()==1:
+                                if df_melted["Unit"].nunique()==1:
+                                    unit = df_melted["Unit"].unique()[0]
+                                    metric_name = df_melted["Region"].unique()[0]
+                                else: 
+                                    unit='Unit (Mixed)'
+                                    metric_name = "Multiple Commodity"
+                                # Plot the line chart
+                                fig = px.line(df_melted, x="Year", y="Value", color="Commodity", 
+                                            title= metric_name, 
+                                            labels={"Value": unit, "Year": "Year", "Commodity": "Commodity"},
+                                            markers=True)
+
+                                # Set the line styles for median and other models
+                                fig.update_traces(line=dict(color="grey"), selector=dict(name="Commodity"))
+
+                                # Set chart height
+                                fig.update_layout(height=600, width=1200)  # Adjust the height as needed (default is ~450)
+                                # Display the plot in Streamlit
+                                st.plotly_chart(fig)
+
+                            else:
+                                st.write('Either choose 1 Region or 1 Commodity')
                         
                         if dataset_name == "Chemical":
                             df_full.columns = df_full.columns.astype(str)
@@ -1107,7 +1200,7 @@ elif st.session_state["page"] == "Reference":
                 st.error("Error loading data preview.")
 elif st.session_state["page"] == "Document":
  # Redirect to document page
-        st.title("How SBTi use science")
+        st.title("PDF Viewer")
 
         # Local file path (Replace this with your actual path)
         pdf_path = "documents/sample.pdf"
