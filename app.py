@@ -1200,7 +1200,7 @@ elif st.session_state["page"] == "Reference":
                 st.error("Error loading data preview.")
 elif st.session_state["page"] == "Document":
  # Redirect to document page
-        st.title("PDF Viewer")
+        st.title("Under construction")
 
         # Local file path (Replace this with your actual path)
         pdf_path = "documents/sample.pdf"
