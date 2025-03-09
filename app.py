@@ -1198,9 +1198,9 @@ elif st.session_state["page"] == "Reference":
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
-elif st.session_state["page"] == "Document":
+elif st.session_state["page"] == "The Science":
  # Redirect to document page
-        st.title("PDF Viewer")
+        st.title("Still under construction")
 
         # Local file path (Replace this with your actual path)
         pdf_path = "documents/sample.pdf"
