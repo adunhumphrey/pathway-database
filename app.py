@@ -118,7 +118,7 @@ with col3:
 with col4:
     if st.button("Document", use_container_width=True, 
                  type="primary" if st.session_state["page"] == "Document" else "secondary"):
-        set_page("Document")
+        set_page("The Science")
 
 
 
@@ -1198,9 +1198,9 @@ elif st.session_state["page"] == "Reference":
                 st.dataframe(df, hide_index=True)
             else:
                 st.error("Error loading data preview.")
-elif st.session_state["page"] == "The Science":
+elif st.session_state["page"] == "Document":
  # Redirect to document page
-        st.title("Still under construction")
+        st.title("PDF Viewer")
 
         # Local file path (Replace this with your actual path)
         pdf_path = "documents/sample.pdf"
