@@ -261,7 +261,7 @@ if st.session_state["page"] == "Home":
     )
 
     # Define tabs for multiple data sources
-    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power-Sector", "Chemical", "Building", "Oil & Gas","FINZ","FLAG","Aluminium","Cement","Steel","Pulp & Paper", "Other Industries","Others"])
+    tabs = st.tabs(["IPCC", "Cross-Sector Pathways", "Power", "Chemical", "Building", "Oil & Gas","FINZ","FLAG","Aluminium","Cement","Steel","Pulp & Paper", "Other Industries","Others"])
 
 
     # File paths and filter columns for different datasets
@@ -278,7 +278,7 @@ if st.session_state["page"] == "Home":
             "remove_columns": [],
             "apply_year_filter": True
         },
-        "Power-Sector": {
+        "Power": {
             "file_path": "Pathway Database - Updated 2024-205.xlsx",
             "filter_columns": ["Metric","Model", "Scenario", "Unit"],
             "remove_columns": [],
