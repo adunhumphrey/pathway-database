@@ -1159,7 +1159,7 @@ elif st.session_state["page"] == "Reference":
                     st.session_state["selected_var"] = categorical_columns[0]
 
                 st.title("Eligible SBTi Scenarios")
-                st.write("These are the eligible Scenarios that pass the principled-driven criteria used in cross-sector and sector-specific pathways")
+                st.write("These are the eligible Scenarios that pass the principled-driven criteria used in cross-sector pathway")
                 # Layout: Left (buttons) | Right (data)
                 col1, col2 = st.columns([1, 5])
 
